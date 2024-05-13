@@ -1,0 +1,9 @@
+.k-dropdowntree {
+    width: 100% !important;
+}
+.form-control {
+    border-radius: 4px;
+    background-color: #ECECF3;
+    border: transparent;
+    min-height: 50px;
+}
