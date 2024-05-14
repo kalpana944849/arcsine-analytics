@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useFormik } from 'formik';
 
 import { addVisitFlagFolder, updateVisitFlagFolder } from '../../../../../../services/visit-service';
 import VisitStructureTreeList from '../VisitStructureTreeList';
+import commonSchema from '../../../../../../utils/validationSchema/common-schema';
 
 const AddUpdateVisitFlagModal = (props) => {
     const {
@@ -15,23 +16,19 @@ const AddUpdateVisitFlagModal = (props) => {
         selectedRow,
         visitStructureTreeData
     } = props;
-    const { register, handleSubmit, reset, formState, setValue } = useForm({
-        shouldUnregister: true
-    });
     const [loading, setLoading] = useState(false);
-    const { dirtyFields, errors } = formState;
     const sapData = JSON.parse(localStorage.getItem("SapDataId"));
     const sapVersionId = JSON.parse(localStorage.getItem("sapVersionId"));
     const [editableOrViewable, setEditableOrViewable] = useState(false);
     const [flagParentInfo, setFlagParentInfo] = useState({});
     const [sapVisitSelectionInputs, setSapVisitSelectionInputs] = useState([]);
+    const [checkedItems, setCheckedItems] = useState({});
+    const [checkedData, setCheckedData] = useState([]);
+    const [changeNotDetect, setChangeNotDetect] = useState(true);
 
     useEffect(() => {
         if (flagModalState === "edit" || flagModalState === "view" ? true : false) {
             setEditableOrViewable(true);
-            setValue('shortName', selectedRow.visitFlagNameShort);
-            setValue('longName', selectedRow.visitFlagNameLong);
-            setValue('description', selectedRow.visitFlagDescription);
         } else {
             let info;
             if (selectedRow && selectedRow.isFolder) {
@@ -50,48 +47,114 @@ const AddUpdateVisitFlagModal = (props) => {
         }
     }, [flagModalState]);
 
-    const onSubmit = async (data) => {
-        setLoading(true);
-        try {
-            let response;
-            const reqBody = {
-                "sapVisitFlagId": editableOrViewable ? selectedRow.sapVisitFlagId : 0,
-                "sapVisitFlagGuid": editableOrViewable ? selectedRow.sapVisitFlagGuid : "",
-                "companyId": editableOrViewable ? selectedRow.companyId : sapData.companyId,
-                "sapId": editableOrViewable ? selectedRow.sapId : sapData.sapId,
-                "sapVersionId": editableOrViewable ? selectedRow.sapVersionId : sapVersionId,
-                "parentId": editableOrViewable ? selectedRow.parentId : flagParentInfo.parentId,
-                "parentGuid": editableOrViewable ? selectedRow.parentGuid : flagParentInfo.parentGuid,
-                "isFolder": editableOrViewable ? selectedRow.isFolder : false,
-                "visitFlagNameShort": data.shortName,
-                "visitFlagNameLong": data.longName,
-                "visitFlagDescription": data.description,
-                "displayOrder": editableOrViewable ? selectedRow.displayOrder : 0,
-                "createdBy": editableOrViewable ? selectedRow.createdBy : "",
-                "updatedBy": editableOrViewable ? selectedRow.updatedBy : "",
-                "createdDate": editableOrViewable ? selectedRow.createdDate : "2024-03-03T05:01:38.926Z",
-                "updatedDate": editableOrViewable ? selectedRow.updatedDate : "2024-03-03T05:01:38.926Z",
-                "sapVisitSelectionInputs": sapVisitSelectionInputs
-            };
+    useEffect(() => {
+        if (selectedRow) {
+            setCheckedItems(selectedRow.sapVisitSelectionInputs);
+            setCheckedData(selectedRow.sapVisitSelectionInputs);
+        }
+    }, [selectedRow]);
 
-            if (editableOrViewable) {
-                response = await updateVisitFlagFolder(reqBody);
+    // Function to toggle the checked state of a checkbox
+    const toggleCheckbox = (data) => {
+        setCheckedItems(prevState => ({
+            ...prevState,
+            [data.sapVisitId]: !prevState[data.sapVisitId]
+        }));
+
+        if (checkedData.some(obj => obj.sapVisitId === data.sapVisitId)) {
+            const indexToRemove = checkedData.findIndex(obj => obj.sapVisitId === data.sapVisitId);
+            if (indexToRemove !== -1) {
+                checkedData.splice(indexToRemove, 1);
+                setCheckedData(checkedData);
+                if (JSON.stringify(checkedData) === JSON.stringify(selectedRow.sapVisitSelectionInputs)) {
+                    setChangeNotDetect(true);
+                } else {
+                    setChangeNotDetect(false);
+                }
+            }
+        } else {
+            setCheckedData([...checkedData, data]);
+            if (JSON.stringify([...checkedData, data]) === JSON.stringify(selectedRow.sapVisitSelectionInputs)) {
+                setChangeNotDetect(true);
             } else {
-                response = await addVisitFlagFolder(reqBody);
+                setChangeNotDetect(false);
             }
-            if (response && response.data.status === "OK") {
-                await new Promise((resolve) => setTimeout(resolve, 1000));
-                reset();
-                setShowAddFlagModal(false);
-                setSuccessMessage(`Visit flag has been ${editableOrViewable ? "updated" : "added"} successfully.`);
-                setShowSuccessAlert(true);
-            }
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoading(false);
         }
     };
+
+    const formik = useFormik({
+        initialValues: {
+            shortName: selectedRow?.visitFlagNameShort,
+            longName: selectedRow?.visitFlagNameLong,
+            description: selectedRow?.visitFlagDescription,
+            label: selectedRow?.visitFlagLabel
+        },
+        enableReinitialize: true,
+        validationSchema: commonSchema,
+        onSubmit: async (values, { resetForm }) => {
+            const selectedData = [];
+            checkedData.forEach((item) => {
+                selectedData.push({
+                    "sapVisitSelectionId": 0,
+                    "sapVisitSelectionGuid": "",
+                    "companyId": item.companyId,
+                    "sapId": item.sapId,
+                    "sapVersionId": item.sapVersionId,
+                    "sapVisitFlagId": 0,
+                    "sapVisitId": Number((item.sapVisitId).split('_')[1]),
+                    "sapVisitTimeId": 0,
+                    "createdBy": "test",
+                    "updatedBy": "test",
+                    "createdDate": "",
+                    "updatedDate": ""
+                });
+            });
+            setSapVisitSelectionInputs(checkedData);
+
+            setLoading(true);
+            try {
+                let response;
+                const reqBody = {
+                    "sapVisitFlagId": editableOrViewable ? selectedRow.sapVisitFlagId : 0,
+                    "sapVisitFlagGuid": editableOrViewable ? selectedRow.sapVisitFlagGuid : "",
+                    "companyId": editableOrViewable ? selectedRow.companyId : sapData.companyId,
+                    "sapId": editableOrViewable ? selectedRow.sapId : sapData.sapId,
+                    "sapVersionId": editableOrViewable ? selectedRow.sapVersionId : sapVersionId,
+                    "parentId": editableOrViewable ? selectedRow.parentId : flagParentInfo.parentId,
+                    "parentGuid": editableOrViewable ? selectedRow.parentGuid : flagParentInfo.parentGuid,
+                    "isFolder": editableOrViewable ? selectedRow.isFolder : false,
+                    "visitFlagNameShort": values.shortName,
+                    "visitFlagNameLong": values.longName,
+                    "visitFlagDescription": values.description,
+                    "visitFlagLabel": values.label,
+                    "displayOrder": editableOrViewable ? selectedRow.displayOrder : 0,
+                    "createdBy":  "test",
+                    "updatedBy":  "test",
+                    "createdDate": editableOrViewable ? selectedRow.createdDate : "",
+                    "updatedDate": editableOrViewable ? selectedRow.updatedDate : "",
+                    "sapVisitSelectionInputs": selectedData
+                    // "sapVisitSelectionInputs": sapVisitSelectionInputs
+                };
+
+                if (editableOrViewable) {
+                    response = await updateVisitFlagFolder(reqBody);
+                } else {
+                    response = await addVisitFlagFolder(reqBody);
+                }
+                if (response && response.data.status === "OK") {
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                    reset();
+                    setShowAddFlagModal(false);
+                    setSuccessMessage(`Visit flag has been ${editableOrViewable ? "updated" : "added"} successfully.`);
+                    setShowSuccessAlert(true);
+                }
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setLoading(false);
+            }   
+        }
+    });
 
     return (
         <>
@@ -114,35 +177,40 @@ const AddUpdateVisitFlagModal = (props) => {
                                 aria-label="Close"
                                 onClick={() => {
                                     reset();
+                                    formik.resetForm();
                                     setShowAddFlagModal(false);
                                     setFlagModalState("add");
                                 }}
                             ></button>
                         </div>
                         <div className="modal-body">
-                            <form onSubmit={handleSubmit(onSubmit)}>
+                            <form onSubmit={formik.handleSubmit}>
                                 <div className="row mb-3">
                                     <div className="col">
                                         <label htmlFor="shortName" className="form-label">Short Name <sup className="text-danger">*</sup></label>
                                         <input
                                             type="text"
-                                            id="shortName"
                                             name="shortName"
-                                            className={`form-control ${errors.shortName ? 'is-invalid' : ''}`}
+                                            className={`form-control ${formik.touched.shortName && formik.errors.shortName ? 'is-invalid' : ''}`}
                                             disabled={flagModalState === 'view'}
-                                            {...register('shortName', { required: 'This field is required.' })}
+                                            onChange={formik.handleChange}
+                                            onBlur={formik.handleBlur}
+                                            value={formik.values.shortName}
                                         />
-                                        {errors.shortName && <div className="invalid-feedback">{errors.shortName.message}</div>}
+                                        {formik.touched.shortName && formik.errors.shortName ? (
+                                            <small className="text-danger validationError">{formik.errors.shortName}</small>
+                                        ) : null}
                                     </div>
                                     <div className="col">
                                         <label htmlFor="longName" className="form-label">Long Name</label>
                                         <input
                                             type="text"
-                                            id="longName"
                                             name="longName"
-                                            className={`form-control ${errors.longName ? 'is-invalid' : ''}`}
+                                            className="form-control"
                                             disabled={flagModalState === 'view'}
-                                            {...register('longName')}
+                                            onChange={formik.handleChange}
+                                            onBlur={formik.handleBlur}
+                                            value={formik.values.longName}
                                         />
                                     </div>
                                 </div>
@@ -151,11 +219,12 @@ const AddUpdateVisitFlagModal = (props) => {
                                         <label htmlFor="description" className="form-label">Description</label>
                                         <input
                                             type="description"
-                                            id="description"
                                             name="description"
-                                            className={`form-control ${errors.description ? 'is-invalid' : ''}`}
+                                            className="form-control"
                                             disabled={flagModalState === 'view'}
-                                            {...register('description')}
+                                            onChange={formik.handleChange}
+                                            onBlur={formik.handleBlur}
+                                            value={formik.values.description}
                                         />
                                     </div>
                                 </div>
@@ -164,30 +233,49 @@ const AddUpdateVisitFlagModal = (props) => {
                                         <label htmlFor="label" className="form-label">Label</label>
                                         <input
                                             type="text"
-                                            id="label"
                                             name="label"
-                                            className={`form-control ${errors.label ? 'is-invalid' : ''}`}
+                                            className="form-control"
                                             disabled={flagModalState === 'view'}
-                                            {...register('label')}
+                                            onChange={formik.handleChange}
+                                            onBlur={formik.handleBlur}
+                                            value={formik.values.label}
                                         />
                                     </div>
                                 </div>
                                 <div className="row mb-3 visit-structure-tree-data-wrapper">
-                                    <VisitStructureTreeList 
+                                    <VisitStructureTreeList
                                         data={visitStructureTreeData}
                                         sapVisitSelectionInputs={sapVisitSelectionInputs}
                                         setSapVisitSelectionInputs={setSapVisitSelectionInputs}
+                                        toggleCheckbox={toggleCheckbox}
+                                        checkedItems={checkedItems}
                                     />
                                 </div>
                                 <div className="d-flex">
-                                    <button type="submit" className="btn btn-primary w-100 mt-2 me-2" disabled={loading || Object.keys(dirtyFields).length === 0}>
+                                    <button 
+                                        type="submit" 
+                                        className="btn btn-primary w-100 mt-2 me-2" 
+                                        // disabled={(loading || Object.keys(dirtyFields).length === 0) && changeNotDetect}
+                                        // disabled={(loading || !isDirty) && changeNotDetect}
+                                        disabled={(
+                                            formik.values.shortName == selectedRow?.visitFlagNameShort && 
+                                            formik.values.longName == selectedRow?.visitFlagNameLong && 
+                                            formik.values.description == selectedRow?.visitFlagDescription && 
+                                            formik.values.label == selectedRow?.visitFlagLabel && changeNotDetect
+                                        ) || loading}
+                                    >
                                         {loading ? <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> : 'Save'}
                                     </button>
                                     <button
                                         type="button"
                                         className="btn btn-outline-primary w-100 mt-2"
-                                        onClick={() => reset()}
-                                        disabled={loading || Object.keys(dirtyFields).length === 0}
+                                        onClick={() => formik.resetForm()}
+                                        disabled={(
+                                            formik.values.shortName == selectedRow?.visitFlagNameShort && 
+                                            formik.values.longName == selectedRow?.visitFlagNameLong && 
+                                            formik.values.description == selectedRow?.visitFlagDescription && 
+                                            formik.values.label == selectedRow?.visitFlagLabel && changeNotDetect
+                                        ) || loading}
                                     >
                                         Discard
                                     </button>

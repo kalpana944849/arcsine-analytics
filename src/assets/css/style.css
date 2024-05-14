@@ -1275,6 +1275,15 @@ body{
 .visit-structure-table-wrapper {
     height: calc(100vh - 73px);
 }
+.modal-body .visit-structure-tree-data-wrapper {
+    max-height: calc(100vh - 85px);
+    overflow: auto;
+    /* min-height: calc(100vh - 560px); */
+    height: 300px;
+}
+.modal-body .visit-structure-tree-data-wrapper .visit-structure-table-wrapper {
+    height: auto;
+}
 .k-grid-header th {
     position: sticky;
     top: 0;

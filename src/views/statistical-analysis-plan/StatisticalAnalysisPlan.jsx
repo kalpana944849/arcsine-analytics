@@ -119,7 +119,6 @@ const StatisticalAnalysisPlan = ({
 				localStorage.setItem("sapDataItem", JSON.stringify(updatedData));
 				setSelectedRow(updatedData)
 			}
-
 			setLoading(false);
 		}
 	};
@@ -133,7 +132,6 @@ const StatisticalAnalysisPlan = ({
 				JSON.stringify(response.data.data?.sapVersionDTOs)
 			);
 			setSapVersion(response.data.data?.sapVersionDTOs);
-
 			localStorage.setItem(
 				"sapVersionId",
 				response.data.data?.sapVersionDTOs[0].sapVersionId
@@ -716,19 +714,48 @@ const StatisticalAnalysisPlan = ({
 				sapTypeName: sapTypeName,
 				displayOrder: 1,
 				roleName: null,
-				sapVersionDTOs: null,
+				sapVersionDTOs:  [
+					{
+						"sapVersionId": sapVersion.length ? sapVersion[0].sapVersionId : 0,
+						"sapVersionGuid": sapVersion.length ? sapVersion[0].sapVersionGuid : "",
+						"companyId": 1,
+						"sapId": 4,
+						"sapVersionNumber": sapVersionNumber,
+						"sapVersionDate": sapVersionDate,
+						"sapVersionNameShort": sapVersionShortName,
+						"sapVersionNameLong": sapVersionLongName,
+						"sapVersionDescription": '',
+						"updatedBy": "Loggedin- user",
+						"createdBy": "Loggedin- user",
+						"createdDate": "2023-11-06T09:20:39.933",
+						"updatedDate": "2023-11-06T09:20:40.107"
+					}
+				],
 				createdBy: null,
 				updatedBy: null,
 			};
+			console.log('reqBody', reqBody);
+			// return
 			setMessage("SAP has been updated successfully.");
 			const response = await updateSap(reqBody);
 			if (response.status == 200) {
 				getSAP(true, true);
+				getSAPId(selectedRow.sapGuid, 16);
 				setShowAlert(true);
 			}
 		},
 	});
-
+   useEffect(()=>{
+	  formikSapGeneral.resetForm()
+	  formikSapSave.resetForm();
+	  setSapVersionShortName(
+		sapVersion[0]?.sapVersionNameShort
+	);
+	setSapVersionLongName(sapVersion[0]?.sapVersionNameLong !== null ? sapVersion[0]?.sapVersionNameLong : "");
+	setSapVersionNumber(sapVersion[0]?.sapVersionNumber);
+	setSapVersionDate(sapVersion[0]?.sapVersionDate);
+	//   getSAPId(selectedRow.sapGuid, 16);
+   }, [showGeneral])
 	const customColumnForVersionDate = (props) => {
 		return (
 			<td>
@@ -813,7 +840,7 @@ const StatisticalAnalysisPlan = ({
 									</div>
 									<div class="col">
 										<label htmlFor="exampleInputEmail1" class="form-label">
-											Long Name	
+											Long Name
 										</label>
 										<input
 											type="text"
@@ -943,8 +970,9 @@ const StatisticalAnalysisPlan = ({
 										<input
 											type="text"
 											class="form-control"
+											readOnly
 											id="longName"
-											readOnly={rollName == "Reviewer" ? true : false}
+											// readOnly={rollName == "Reviewer" ? true : false}
 											onChange={(e) => {
 												setSapVersionDate(e.target.value);
 											}}
@@ -977,6 +1005,12 @@ const StatisticalAnalysisPlan = ({
 												sapVersionDate == sapVersion[0].sapVersionDate
 											}
 										>
+											{formikSapGeneral.isSubmitting && (
+												<div
+													className="spinner-border spinner-border-sm text-light me-2"
+													role="status"
+												></div>
+											)}
 											Save
 										</button>
 										<button
@@ -995,17 +1029,17 @@ const StatisticalAnalysisPlan = ({
 												sapVersion[0]?.sapVersionNameShort &&
 												sapVersionLongName ==
 												sapVersion[0]?.sapVersionNameLong &&
-												sapVersionNumber == sapVersion[0].sapVersionNumber &&
-												sapVersionDate == sapVersion[0].sapVersionDate
+												sapVersionNumber == sapVersion[0]?.sapVersionNumber &&
+												sapVersionDate == sapVersion[0]?.sapVersionDate
 											}
 											onClick={() => {
 												formikSapGeneral.resetForm();
 												setSapVersionShortName(
-													sapVersion[0].sapVersionNameShort
+													sapVersion[0]?.sapVersionNameShort
 												);
-												setSapVersionLongName(sapVersion[0].sapVersionNameLong !== null ? sapVersion[0].sapVersionNameLong : "");
-												setSapVersionNumber(sapVersion[0].sapVersionNumber);
-												setSapVersionDate(sapVersion[0].sapVersionDate);
+												setSapVersionLongName(sapVersion[0]?.sapVersionNameLong !== null ? sapVersion[0]?.sapVersionNameLong : "");
+												setSapVersionNumber(sapVersion[0]?.sapVersionNumber);
+												setSapVersionDate(sapVersion[0]?.sapVersionDate);
 											}}
 										>
 											Discard
@@ -1191,7 +1225,7 @@ const StatisticalAnalysisPlan = ({
 														);
 													})}
 											</select>
-										</div> }
+										</div>}
 										<div className="mt-3 mb-3">
 											<div
 												className="mb-2"

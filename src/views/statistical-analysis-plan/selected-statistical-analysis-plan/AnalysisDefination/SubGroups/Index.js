@@ -8,6 +8,7 @@ import { AddSubGroup, AddSubGroupFolder } from './Forms';
 import SubGroupsMoveToDifferentFolderModal from './SubGroupsMoveToDifferentFolderModal';
 import SweetAlert from 'react-bootstrap-sweetalert';
 import { getParsedFromLocalStorage } from '../../../../../utils/common-helper';
+import CustomDropDownTreeSubgroup from '../../../../../components/common/CustomDropDownTree/CustomDropDownTreeSubgroup';
 
 const SubGroups = () => {
   const [showSelected, setShowSelected] = useState(false);
@@ -17,6 +18,7 @@ const SubGroups = () => {
   const [showAddSubGroup, setShowSubGroup] = useState(false);
   const [isFolder, setIsFolder] = useState(false);
   const [showAlert, setShowAlert] = React.useState(false);
+  const [reload, setReload] = React.useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
   const [message, setMessage] = React.useState("");
 
@@ -208,10 +210,35 @@ const SubGroups = () => {
 		}
 	}, []);
   const [varView, setVarView] = useState([])
+  const [varViewData, setVarViewData] = useState([])
   const getSubGroupDropDown = async () => {
      const response = await subGroupVariableView()
-     setVarView(response.data.data) 
-     console.log('varView', response.data);
+     setVarView(response.data.data)
+     const Data = response.data.data; 
+     const treeData = [];
+     Data.forEach(element => {
+       if (element.isFolder) {
+         treeData.push({
+           id: element.sapDataVariableId,
+           text: element.sapDataDatasetVariableName,
+           sapDataVariableGuid: element.sapDataVariableGuid,
+           items: []
+         });
+       }
+     });
+
+     Data.forEach(element => {
+       treeData.forEach(item => {
+         if (element.parentId === item.id) {
+           item.items.push({
+             id: element.sapDataVariableId,
+             text: element.sapDataDatasetVariableName,
+             sapDataVariableGuid: element.sapDataVariableGuid
+           });
+         }
+       });
+     });
+     setVarViewData(treeData)
   }
 	useEffect(() => {
     getSubGroupDropDown()
@@ -358,7 +385,7 @@ const SubGroups = () => {
                 <div
                   className='mb-3'
                 >
-                  <label
+                  {/* <label
                     htmlFor="exampleInputEmail1"
                     class="form-label"
                   >
@@ -382,7 +409,16 @@ const SubGroups = () => {
                       </option>
                       )
                     })}
-                  </select>
+                  </select> */}
+                  <CustomDropDownTreeSubgroup
+										label="Subgroup variable"
+										fieldName="subgroupVariable"
+										data={varViewData}
+										formik={formikSubGroupSave}
+										rowData={selectedRow}
+                    setTreeData={setVarViewData}
+                    reload={reload}
+									/>
                 </div>
                 <div class="mb-3">
                   <label htmlFor="exampleInputEmail1" class="form-label">
@@ -417,7 +453,7 @@ const SubGroups = () => {
                   />
                 </div>
                 <div class="mb-3">
-                  <label htmlFor="exampleInputEmail1" class="form-label">
+                  {/* <label htmlFor="exampleInputEmail1" class="form-label">
                     Covariance to exclude from analysis model
                   </label>
                   <select
@@ -437,7 +473,16 @@ const SubGroups = () => {
                       </option>
                       )
                     })}
-                  </select>
+                  </select> */}
+                  <CustomDropDownTreeSubgroup
+										label="Covariance to exclude from analysis model"
+										fieldName="covariance"
+										data={varViewData}
+										formik={formikSubGroupSave}
+										rowData={selectedRow}
+                    setTreeData={setVarViewData}
+                    reload={reload}
+									/>
                 </div>
 
                 <div className="d-flex">
@@ -463,7 +508,10 @@ const SubGroups = () => {
                   <button
                     type="button"
                     className="btn btn-outline-primary w-100 mt-2"
-                    onClick={formikSubGroupSave.resetForm}
+                    onClick={()=>{
+                      formikSubGroupSave.resetForm();
+                      setReload(!reload)
+                    }}
                     disabled={
                       formikSubGroupSave.values.subgroupVariable == selectedRow?.sapDataVariableId &&
                       formikSubGroupSave.values.refrencevalue == selectedRow?.sapSubgroupReferenceValue &&
@@ -579,13 +627,12 @@ const SubGroups = () => {
       >{message}</SweetAlert>
         <SweetAlert
         show={showDeleteConfirm}
-        danger
         showCancel
         cancelBtnText="No"
         confirmBtnText="Yes"
-        confirmBtnBsStyle="primary"
-        cancelBtnBsStyle="secondary"
-        title="Are you sure?"
+        // confirmBtnBsStyle="primary"
+        cancelBtnBsStyle="light"
+        title="Confirm to delete"
         onConfirm={() => {
           handleDeleteFolder();
           setShowDeleteConfirm(false);
@@ -593,9 +640,9 @@ const SubGroups = () => {
         onCancel={() => {
           setShowDeleteConfirm(false);
         }}
-        focusCancelBtn
+        // focusCancelBtn
       >
-        Do you want to delete this subgroup?
+        Are you sure?
       </SweetAlert>
       {showMoveToDifferentFolderModalSubgroup && <SubGroupsMoveToDifferentFolderModal closeModal={setShowMoveToDifferentFolderModalSubgroup}
         treelistData={subGroupsData}

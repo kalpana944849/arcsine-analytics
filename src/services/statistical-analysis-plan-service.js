@@ -249,10 +249,15 @@ export const GetSapTreatmentPoolingDataBySapTreatmentTypeId = async (sapTreatmen
     });
 };
 export const getSapTreatmentInput = async () => {
-    return await API.get(`SapTreatmentInput/GetBySapId/43/24`).catch((error) => {
+    return await API.get(`SapTreatmentPoolingInput/GetSapTreatmentInputBySapTreatmentTypeId/1/24/43`).catch((error) => {
         return error;
     });
 };
+// export const getSapTreatmentInput = async () => {
+//     return await API.get(`SapTreatmentInput/GetBySapId/43/24`).catch((error) => {
+//         return error;
+//     });
+// };
 
 export const deleteTreatmentType = async (sapTreatmentTypeId, deleteBy="test") => {
     return await API.delete(`Treatment/DeleteTreatmentTypeInput?sapTreatmentTypeId=${sapTreatmentTypeId}&deleteBy=${deleteBy}`).catch((error) => {

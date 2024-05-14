@@ -19,7 +19,8 @@ const CustomCell = (props) => {
 		isCheckboxEnabled,
 		sapVisitSelectionInputsCopy,
 		setSapVisitSelectionInputs,
-		handleCheckbox
+		toggleCheckbox,
+		checkedItems
 	} = props;
 	const intl = useInternationalization();
 	const data = dataItem[props.field];
@@ -27,48 +28,6 @@ const CustomCell = (props) => {
 	let dataAsString = "";
 	const icons = [];
 	const [isChecked, setIsChecked] = useState(false);
-
-    const handleCheckboxChange = (event) => {
-		// console.log(props);
-		// // const isChecked = event.target.checked;
-		// // return false;
-		// let data = [...sapVisitSelectionInputsCopy];
-		// const isRowSelected = data.find((item) => item.sapVisitId === dataItem.sapVisitId);
-		// console.log(isRowSelected);
-		// if (isRowSelected == undefined) {
-		// 	setIsChecked(true);
-		// 	console.log("data", true);
-		// } else {
-		// 	setIsChecked(false);
-		// 	data = data.filter(item => item.sapVisitId !== dataItem.sapVisitId);
-		// 	setSapVisitSelectionInputs(data);
-		// 	return false;
-		// }
-
-		// const currentDateTime = new Date();
-		// const visit = {
-		// 	"sapVisitSelectionId": dataItem.sapVisitId,
-		// 	"sapVisitSelectionGuid": dataItem.sapVisitGuid,
-		// 	"companyId": dataItem.companyId,
-		// 	"sapId": dataItem.sapId,
-		// 	"sapVersionId": dataItem.sapVersionId,
-		// 	"sapVisitFlagId": 0,
-		// 	"sapVisitId": dataItem.sapVisitId,
-		// 	"sapVisitTimeId": dataItem.sapVisitGuid,
-		// 	"createdBy": "test",
-		// 	"updatedBy": "test",
-		// 	"createdDate": currentDateTime,
-		// 	"updatedDate": currentDateTime
-		// };
-		// data.push(visit);
-		// console.log("sapVisitSelectionInputsCopy", sapVisitSelectionInputsCopy);
-		// console.log("data", data);
-		// handleCheckbox(visit);
-		// setSapVisitSelectionInputs(data);
-		// debugger;
-		// return true;
-		setIsChecked(!isChecked);
-    };
 
 	if (data !== undefined && data !== null) {
 		dataAsString = format ? intl.format(format, data) : data.toString();
@@ -115,13 +74,14 @@ const CustomCell = (props) => {
 				colSpan={props.colSpan}
 				onClick={(event) => onRowClick(event, props)}
 			>
-				{isCheckboxEnabled && 
-					<input 
-						type="checkbox" 
+				{isCheckboxEnabled &&
+					<input
+						type="checkbox"
 						style={{ marginRight: '12px' }}
 						// checked={sapVisitSelectionInputsCopy.includes(dataItem.sapVisitId)}
-						checked={isChecked}
-                		onChange={handleCheckboxChange}
+						// checked={isChecked}
+						checked={checkedItems && Object.keys(checkedItems).length > 0 ? checkedItems[dataItem?.sapVisitId] : false}
+						onChange={() => toggleCheckbox(dataItem)}
 						value={dataItem.sapVisitId}
 						id={dataItem.sapVisitId}
 						name="visitFlag"
@@ -129,13 +89,13 @@ const CustomCell = (props) => {
 				}
 				{icons}
 				{folderIcon ?
-						<i className={`m-1 ${expanded ? "k-icon k-i-folder-open k-color-dark" : "k-icon k-i-folder k-color-dark"}`} title="Folder"></i> :
-						<>
-							{dataItem.sapDataLevelId && dataItem.sapDataLevelId === 3 ?
-								<i className={`m-1 ${iconForThirdLevelRow ? iconForThirdLevelRow : "k-icon k-i-file k-color-dark"}`} title={iconTitleForThirdLevelRow ? iconTitleForThirdLevelRow : "Folder"}></i> :
-								<i className={`m-1 ${icon ? icon : "k-icon k-i-file k-color-dark"}`} title={iconTitle ? iconTitle : "Folder"}></i>
-							}
-						</>
+					<i className={`m-1 ${expanded ? "k-icon k-i-folder-open k-color-dark" : "k-icon k-i-folder k-color-dark"}`} title="Folder"></i> :
+					<>
+						{dataItem.sapDataLevelId && dataItem.sapDataLevelId === 3 ?
+							<i className={`m-1 ${iconForThirdLevelRow ? iconForThirdLevelRow : "k-icon k-i-file k-color-dark"}`} title={iconTitleForThirdLevelRow ? iconTitleForThirdLevelRow : "Folder"}></i> :
+							<i className={`m-1 ${icon ? icon : "k-icon k-i-file k-color-dark"}`} title={iconTitle ? iconTitle : "Folder"}></i>
+						}
+					</>
 				}
 				{dataAsString}
 			</td>

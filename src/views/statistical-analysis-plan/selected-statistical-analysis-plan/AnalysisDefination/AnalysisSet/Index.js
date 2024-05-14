@@ -1049,11 +1049,19 @@ const AnalysisSet = () => {
 															value={formikTreatment.values.TreatmentVariableCode}
 														>
 															<option selected value="">Select Treatment Code</option>
-															{teatmentVariableCodes.length > 0 && teatmentVariableCodes.map((code, index) => {
+															{/* {teatmentVariableCodes.length > 0 && teatmentVariableCodes.map((code, index) => {
 																return (
 																	<option key={index} value={code.sapDataVariableId}>{code.sapDataVariableNameShort}</option>
 																);
-															})}
+															})} */}
+
+															{treatmentCode.length > 0 &&
+																treatmentCode.map((x, i) => {
+																	return (
+																		<option key={i} value={x.sapDataVariableId}>{x.sapDataDatasetVariableName}</option>
+																	);
+																})
+															}
 														</select>
 													</div>
 													<div class="col">
@@ -1071,11 +1079,19 @@ const AnalysisSet = () => {
 															value={formikTreatment.values.decode}
 														>
 															<option selected value="">Select Treatment Decode</option>
-															{teatmentVariableDecodes.length > 0 && teatmentVariableDecodes.map((code, index) => {
+															{/* {teatmentVariableDecodes.length > 0 && teatmentVariableDecodes.map((code, index) => {
 																return (
 																	<option key={index} value={code.sapDataVariableId}>{code.sapDataVariableNameShort}</option>
 																);
-															})}
+															})} */}
+
+															{treatmentDeCode.length > 0 &&
+																treatmentDeCode.map((x, i) => {
+																	return (
+																		<option key={i} value={x.sapDataVariableId}>{x.sapDataDatasetVariableName}</option>
+																	);
+																})
+															}
 														</select>
 													</div>
 												</div>

@@ -12,7 +12,7 @@ const SELECTED_FIELD = "selected";
 const idGetter = getter(DATA_ITEM_KEY);
 
 const VisitStructureTreeList = (props) => {
-    const { data, sapVisitSelectionInputs, setSapVisitSelectionInputs } = props;
+    const { data, sapVisitSelectionInputs, setSapVisitSelectionInputs, handleCheckbox, toggleCheckbox, checkedItems } = props;
     let expandObj = {};
     const [selectedState, setSelectedState] = useState({});
     const [selectedRow, setSelectedRow] = useState([{ parentId: null }]);
@@ -40,7 +40,8 @@ const VisitStructureTreeList = (props) => {
                     isCheckboxEnabled={true}
                     sapVisitSelectionInputsCopy={sapVisitSelectionInputsCopy}
                     setSapVisitSelectionInputs={setSapVisitSelectionInputs}
-                    handleCheckbox={handleCheckbox}
+                    toggleCheckbox={toggleCheckbox}
+                    checkedItems={checkedItems}
                 />
             ),
             headerCell: () => {
@@ -116,11 +117,6 @@ const VisitStructureTreeList = (props) => {
         setSelectedState(newSelectedState);
         if (!newSelectedState) setDataLevelID(0);
     }, [selectedState]);
-
-    const handleCheckbox = (visit) => {
-        const data = [...sapVisitSelectionInputs, visit];
-        setSapVisitSelectionInputs(data);
-    };
 
     return (
         <>

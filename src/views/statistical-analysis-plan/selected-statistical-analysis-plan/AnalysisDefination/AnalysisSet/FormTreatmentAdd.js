@@ -73,11 +73,11 @@ export const FormTreatmentAdd = ({
     const response = await getSapTreatmentInput();
     if (response.status == 200) {
       let data = [];
-      const uniqueArray = response.data.data.filter((obj, index, self) =>
-        index === self.findIndex((o) => o.sapTreatmentTypeId === obj.sapTreatmentTypeId)
-      );
-
-      uniqueArray.forEach((treatment) => {
+    //   const uniqueArray = response.data.data.filter((obj, index, self) =>
+    //     index === self.findIndex((o) => o.sapTreatmentTypeId === obj.sapTreatmentTypeId)
+    //   );
+    // console.log('uniqueArray', response.data.data);
+    response.data.data.forEach((treatment) => {
         data.push({value: treatment.sapTreatmentId, label: treatment.treatmentNameShort});
       });
 
