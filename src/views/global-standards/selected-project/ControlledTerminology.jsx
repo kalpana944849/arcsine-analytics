@@ -47,6 +47,8 @@ const extendData = (dataState, selectedState, expandedState) => {
     })
   );
 };
+
+
 const extendData1 = (dataState, selectedState, expandedState) => {
   return mapTree(dataState, subItemsField, (item) =>
     extendDataItem(item, subItemsField, {

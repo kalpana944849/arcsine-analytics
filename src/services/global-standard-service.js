@@ -41,3 +41,16 @@ export const getStandardCategoryParamter = async (id,sapVersionId) => {
         return error;
     });
 };
+
+
+export const getTerminologyCategory = async () => {
+    return await API.get(`ControlledTerminology/GetAll`).catch((error) => {
+        return error;
+    });
+};
+
+export const terminologyCodeGetById = async (Guid) => {
+    return await API.get(`ControlledTerminology/GetById/${Guid}`).catch((error) => {
+        return error;
+    });
+};
